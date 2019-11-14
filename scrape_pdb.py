@@ -58,7 +58,8 @@ class pdb_parser():
             df_list_pdb = pd.read_csv(file_list_pdb, delimiter= ' ', skipinitialspace=True)
             return df_list_pdb
 
-    def parse_pdb_data(self, str_pdb: str, keyword: str, protein_name: str):
+    def parse_pdb_data(self, str_pdb: str, keyword: str, pdb_name: str):
+
         if keyword in format_spacing.keys() and str_pdb.split(' ')[0] == keyword:
             l_label = format_spacing[keyword]['label']
             l_spacing = format_spacing[keyword]['spacing']
@@ -72,14 +73,13 @@ class pdb_parser():
                     else:
                         tmp_dict[l_label[i]] = str_pdb[l_spacing[i-1]:l_spacing[i]].strip()
                 
-                tmp_dict['protein_name'] = protein_name
+                tmp_dict['protein_name'] = pdb_name
                 return tmp_dict
 
     def process_pdb(self, pdb_name, len_atom):
         import requests
         protein_name = pdb_name[:-1]
         protein_chain = pdb_name[-1]
-        num_atoms_detected = 0
         # print('Beginning {} pdb file download with requests'.format(pdb_name))
 
         if not(os.path.exists(self.pdb_dir + '/{}.pdb'.format(protein_name))):
@@ -90,18 +90,13 @@ class pdb_parser():
 
         with open(self.pdb_dir + '/{}.pdb'.format(protein_name), 'r') as f:
             for line in f.readlines():
-                dict_parsed_atom = self.parse_pdb_data(line, 'ATOM', protein_name)
-                dict_parsed_helix = self.parse_pdb_data(line, 'HELIX', protein_name)
-                dict_parsed_sheet = self.parse_pdb_data(line, 'SHEET', protein_name)
+                dict_parsed_atom = self.parse_pdb_data(line, 'ATOM', pdb_name)
+                dict_parsed_helix = self.parse_pdb_data(line, 'HELIX', pdb_name)
+                dict_parsed_sheet = self.parse_pdb_data(line, 'SHEET', pdb_name)
 
                 if dict_parsed_atom:
                     if dict_parsed_atom['chain_id'] == protein_chain:
                         self.df_atom = self.df_atom.append(dict_parsed_atom, ignore_index=True)
-                        
-                        # in order to save parsing time, break if number of atoms reached
-                        num_atoms_detected += 1
-                        if num_atoms_detected == len_atom:
-                            break
 
                 elif dict_parsed_helix:
                     if dict_parsed_helix['init_chain_id'] == protein_chain or \
