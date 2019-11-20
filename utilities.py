@@ -8,13 +8,14 @@ class pdb_utilities:
         self.df_helix = df_helix
         self.df_sheet = df_sheet
 
+
     def find_coordinates_atom(self, protein_name: str, atom_name: str):
         atom_name.split('.')[0]
         found_atom = self.df_atom[(self.df_atom['res_seq'] == atom_name.split('.')[0]) &
                             (self.df_atom['atom_name'] == atom_name.split('.')[1])]
         if protein_name:
             found_atom = found_atom[found_atom['protein_name'] == protein_name]
-
+        
         print('{}\'s coordinate is ({}, {}, {})'.format(atom_name, 
                                                         float(found_atom['x']), 
                                                         float(found_atom['y']), 
@@ -23,28 +24,36 @@ class pdb_utilities:
                 'y': float(found_atom['y']), 
                 'z': float(found_atom['z'])}
 
+
     def listify_coordinates(self, d: dict):
         return np.array([d['x'], d['y'], d['z']])
 
+
     def calculate_angle(self, protein_name: str, seq_aa:str, typ: str):
-        if typ == 'phi':
-            coord_c = self.find_coordinates_atom(protein_name, str(int(seq_aa)-1) + '.C')
-            coord_n = self.find_coordinates_atom(protein_name, seq_aa + '.N')
-            coord_ca = self.find_coordinates_atom(protein_name, seq_aa + '.CA')
-            coord_c_2 = self.find_coordinates_atom(protein_name, seq_aa+'.C')
-            return self.calculate_dihedral([self.listify_coordinates(coord_c), 
-                                    self.listify_coordinates(coord_n), 
-                                    self.listify_coordinates(coord_ca), 
-                                    self.listify_coordinates(coord_c_2)])
-        elif typ == 'psi':
-            coord_n = self.find_coordinates_atom(protein_name, seq_aa + '.N')
-            coord_ca = self.find_coordinates_atom(protein_name, seq_aa + '.CA')
-            coord_c = self.find_coordinates_atom(protein_name, seq_aa + '.C')
-            coord_n_2 = self.find_coordinates_atom(protein_name, str(int(seq_aa)+1) + '.N')
-            return self.calculate_dihedral([self.listify_coordinates(coord_n), 
-                                            self.listify_coordinates(coord_ca), 
-                                            self.listify_coordinates(coord_c), 
-                                            self.listify_coordinates(coord_n_2)])
+        try:
+            if typ == 'phi':
+                coord_c = self.find_coordinates_atom(protein_name, str(int(seq_aa)-1) + '.C')
+                coord_n = self.find_coordinates_atom(protein_name, seq_aa + '.N')
+                coord_ca = self.find_coordinates_atom(protein_name, seq_aa + '.CA')
+                coord_c_2 = self.find_coordinates_atom(protein_name, seq_aa+'.C')
+                return self.calculate_dihedral([self.listify_coordinates(coord_c), 
+                                        self.listify_coordinates(coord_n), 
+                                        self.listify_coordinates(coord_ca), 
+                                        self.listify_coordinates(coord_c_2)])
+            elif typ == 'psi':
+                coord_n = self.find_coordinates_atom(protein_name, seq_aa + '.N')
+                coord_ca = self.find_coordinates_atom(protein_name, seq_aa + '.CA')
+                coord_c = self.find_coordinates_atom(protein_name, seq_aa + '.C')
+                coord_n_2 = self.find_coordinates_atom(protein_name, str(int(seq_aa)+1) + '.N')
+                return self.calculate_dihedral([self.listify_coordinates(coord_n), 
+                                                self.listify_coordinates(coord_ca), 
+                                                self.listify_coordinates(coord_c), 
+                                                self.listify_coordinates(coord_n_2)])
+        
+        # specify float exception in find_coordinate function if atom is not found
+        except Exception:
+            return None
+
 
     def calculate_dihedral(self, list_coords):
         v1 = list_coords[0] - list_coords[1]
@@ -68,5 +77,5 @@ if __name__ == '__main__':
                                   pdb_parser.df_helix, 
                                   pdb_parser.df_sheet)
     print(pdb_parser.df_atom[pdb_parser.df_atom['protein_name'] == '12AS'])
-    print(pdb_utilities.calculate_angle('12ASA', '55', 'psi'))
+    print(pdb_utilities.calculate_angle('12ASA', '327', 'psi'))
 

@@ -83,6 +83,7 @@ class pdb_parser():
         # print('Beginning {} pdb file download with requests'.format(pdb_name))
 
         if not(os.path.exists(self.pdb_dir + '/{}.pdb'.format(protein_name))):
+            print('pdb file for {} not found. Downloading from protein data bank...'.format(protein_name))
             with open(self.pdb_dir + '/{}.pdb'.format(protein_name), 'wb') as f:
                 url = 'https://files.rcsb.org/view/{}.pdb'.format(protein_name)
                 r = requests.get(url)
