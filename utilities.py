@@ -7,7 +7,7 @@ class pdb_utilities:
         self.df_atom = df_atom
         self.df_helix = df_helix
         self.df_sheet = df_sheet
-
+        self.df_aa = pd.DataFrame()
 
     def find_coordinates_atom(self, protein_name: str, atom_name: str):
         atom_name.split('.')[0]
@@ -16,16 +16,16 @@ class pdb_utilities:
         if protein_name:
             found_atom = found_atom[found_atom['protein_name'] == protein_name]
         
-        print('{}\'s coordinate is ({}, {}, {})'.format(atom_name, 
-                                                        float(found_atom['x']), 
-                                                        float(found_atom['y']), 
-                                                        float(found_atom['z'])))
+        # print('{}\'s coordinate is ({}, {}, {})'.format(atom_name, 
+        #                                                 float(found_atom['x']), 
+        #                                                 float(found_atom['y']), 
+        #                                                 float(found_atom['z'])))
         return {'x': float(found_atom['x']), 
                 'y': float(found_atom['y']), 
                 'z': float(found_atom['z'])}
 
-
-    def listify_coordinates(self, d: dict):
+    @staticmethod
+    def listify_coordinates(d: dict):
         return np.array([d['x'], d['y'], d['z']])
 
 
@@ -51,11 +51,15 @@ class pdb_utilities:
                                                 self.listify_coordinates(coord_n_2)])
         
         # specify float exception in find_coordinate function if atom is not found
-        except Exception:
+        except FloatingPointError:
+            print('Floating point error occurred!! {} {} {}'.format(protein_name, seq_aa, typ))
             return None
+        except TypeError:
+            print('Type Error occurred!! {} {} {}'.format(protein_name, seq_aa, typ))
 
 
-    def calculate_dihedral(self, list_coords):
+    @staticmethod
+    def calculate_dihedral(list_coords):
         v1 = list_coords[0] - list_coords[1]
         v2 = list_coords[2] - list_coords[1]
         v3 = list_coords[3] - list_coords[2]
@@ -68,14 +72,21 @@ class pdb_utilities:
         y = np.dot(v1xv2_x_v2xv3, v2)/np.linalg.norm(v2)
         x = np.dot(v1xv2, v2xv3)
 
-        return round(np.degrees(np.arctan2(y, x)), 3)
+        return round(np.degrees(np.arctan2(y, x)), 3)        
 
+    def build_ramachandran_aa(self, res_name):
+        df_aa = self.df_atom[self.df_atom['res_name'] == res_name][['protein_name', 'res_seq']].drop_duplicates(keep='first')
+        self.df_aa = df_aa
+        df_aa['psi'] = df_aa.apply(lambda x: self.calculate_angle(x['protein_name'], x['res_seq'], 'psi'), axis=1)
+        df_aa['phi'] = df_aa.apply(lambda x: self.calculate_angle(x['protein_name'], x['res_seq'], 'phi'), axis=1)
+        
+        return df_aa
 
 if __name__ == '__main__':
-    pdb_parser = pdb_parser(1)
+    pdb_parser = pdb_parser(10)
     pdb_utilities = pdb_utilities(pdb_parser.df_atom, 
                                   pdb_parser.df_helix, 
                                   pdb_parser.df_sheet)
-    print(pdb_parser.df_atom[pdb_parser.df_atom['protein_name'] == '12AS'])
-    print(pdb_utilities.calculate_angle('12ASA', '327', 'psi'))
-
+    # print(pdb_parser.df_atom[pdb_parser.df_atom['protein_name'] == '12AS'])
+    # print(pdb_utilities.calculate_angle('12ASA', '327', 'psi'))
+    pdb_utilities.build_ramachandran_aa('VAL')

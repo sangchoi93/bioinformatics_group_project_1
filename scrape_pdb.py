@@ -46,12 +46,10 @@ class pdb_parser():
         else:
             print('parsing first {} proteins in {}'.format(index_to_break, self.filename_list_pdb))
 
-        for index, pdb in self.df_pdb_list.iterrows():
+        for index, pdb in enumerate(list(self.df_pdb_list['IDs'])):
             if index == index_to_break:
                 break
-            pdb_id = pdb['IDs']
-            print('parsing {}...'.format(pdb_id))
-            self.process_pdb(pdb_id, pdb['length'])
+            self.process_pdb(pdb)
 
     def parse_list_pdb(self, file_name: str):
         with open(file_name, 'r') as file_list_pdb:
@@ -76,10 +74,12 @@ class pdb_parser():
                 tmp_dict['protein_name'] = pdb_name
                 return tmp_dict
 
-    def process_pdb(self, pdb_name, len_atom):
+    def process_pdb(self, pdb_name):
         import requests
         protein_name = pdb_name[:-1]
         protein_chain = pdb_name[-1]
+        print('parsing {}...'.format(pdb_name))
+
         # print('Beginning {} pdb file download with requests'.format(pdb_name))
 
         if not(os.path.exists(self.pdb_dir + '/{}.pdb'.format(protein_name))):
@@ -116,6 +116,9 @@ class pdb_parser():
 
                 
 if __name__ == '__main__':
+    import time
+    time_now = time.time()
     parser = pdb_parser(3)
     # parser.process_pdb('3UTS')
     parser.print_stats()
+    print('----{}s----'.format(time.time() - time_now))
