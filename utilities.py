@@ -3,6 +3,7 @@ import numpy as np
 from scrape_pdb import pdb_parser
 from matplotlib import pyplot as plt
 
+# utilities to analyze the pdb data parsed out by pdb_parser class in scrape_pdb.py
 class pdb_utilities:
     def __init__(self, df_atom, df_helix, df_sheet):
         print('test!')
@@ -23,6 +24,7 @@ class pdb_utilities:
             'polyproline': '10'
         }
 
+
     def find_coordinates_atom(self, protein_name: str, atom_name: str):
         atom_name.split('.')[0]
         found_atom = self.df_atom[(self.df_atom['res_seq'] == atom_name.split('.')[0]) &
@@ -37,6 +39,7 @@ class pdb_utilities:
         return {'x': float(found_atom['x']), 
                 'y': float(found_atom['y']), 
                 'z': float(found_atom['z'])}
+
 
     @staticmethod
     def listify_coordinates(d: dict):

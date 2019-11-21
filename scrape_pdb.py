@@ -32,6 +32,11 @@ format_spacing = {
 
 atom_backchain = ['N', 'CA', 'C', 'O']
 
+# parser class that should read list of pdbs.
+# It first collects pdb files and then parse them into df_atom, df_helix, and df_sheet
+# df_atom contains all atom information including each of their coordinates
+# df_helix contains helix information
+# df_sheet contains sheet information
 class pdb_parser():
     def __init__(self, index_to_break: int=-1):
         self.df_atom = pd.DataFrame()
@@ -51,18 +56,22 @@ class pdb_parser():
                 break
             self.process_pdb(pdb)
 
+
     def parse_list_pdb(self, file_name: str):
         with open(file_name, 'r') as file_list_pdb:
             df_list_pdb = pd.read_csv(file_list_pdb, delimiter= ' ', skipinitialspace=True)
             return df_list_pdb
+
 
     def parse_pdb_data(self, str_pdb: str, keyword: str, pdb_name: str):
 
         if keyword in format_spacing.keys() and str_pdb.split(' ')[0] == keyword:
             l_label = format_spacing[keyword]['label']
             l_spacing = format_spacing[keyword]['spacing']
+
             if len(l_label) != len(l_spacing):
                 raise Exception('length of label and spacing for {} not matching'.format(keyword))
+
             else:
                 tmp_dict = dict()
                 for i in range(len(l_spacing)):
@@ -74,6 +83,7 @@ class pdb_parser():
                 tmp_dict['protein_name'] = pdb_name
                 return tmp_dict
 
+
     def process_pdb(self, pdb_name):
         import requests
         protein_name = pdb_name[:-1]
@@ -84,6 +94,7 @@ class pdb_parser():
 
         if not(os.path.exists(self.pdb_dir + '/{}.pdb'.format(protein_name))):
             print('pdb file for {} not found. Downloading from protein data bank...'.format(protein_name))
+            
             with open(self.pdb_dir + '/{}.pdb'.format(protein_name), 'wb') as f:
                 url = 'https://files.rcsb.org/view/{}.pdb'.format(protein_name)
                 r = requests.get(url)
