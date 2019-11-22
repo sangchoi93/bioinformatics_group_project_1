@@ -1,29 +1,28 @@
 import pandas as pd
 import numpy as np
+import json
 from scrape_pdb import pdb_parser
 from matplotlib import pyplot as plt
 
 # utilities to analyze the pdb data parsed out by pdb_parser class in scrape_pdb.py
 class pdb_utilities:
     def __init__(self, df_atom, df_helix, df_sheet):
-        print('test!')
         self.df_atom = df_atom
         self.df_helix = df_helix
         self.df_sheet = df_sheet
         self.df_aa = pd.DataFrame()
         self.type_helix = {
-            'right-handed alpha': '1',
-            'right-handed omega': '2',
-            'right-handed psi': '3',
-            'right-handed gama': '4',
-            'right-handed 3-10': '5',
-            'left-handed alpha': '6',
-            'left-handed omega': '7',
-            'left-handed gamma': '8',
-            '2-7 ribbon/hex': '9',
-            'polyproline': '10'
+            '1': 'right-handed alpha',
+            '2': 'right-handed omega',
+            '3': 'right-handed psi',
+            '4': 'right-handed gama',
+            '5': 'right-handed 3-10',
+            '6': 'left-handed alpha',
+            '7': 'left-handed omega',
+            '8': 'left-handed gamma',
+            '9': '2-7 ribbon/hex',
+            '10': 'polyproline'
         }
-
 
     def find_coordinates_atom(self, protein_name: str, atom_name: str):
         atom_name.split('.')[0]
@@ -40,11 +39,9 @@ class pdb_utilities:
                 'y': float(found_atom['y']), 
                 'z': float(found_atom['z'])}
 
-
     @staticmethod
     def listify_coordinates(d: dict):
         return np.array([d['x'], d['y'], d['z']])
-
 
     def calculate_angle(self, protein_name: str, seq_aa:str, typ: str):
         try:
@@ -71,7 +68,9 @@ class pdb_utilities:
         except FloatingPointError:
             print('Floating point error occurred!! {} {} {}'.format(protein_name, seq_aa, typ))
             return None
-
+        except TypeError:
+            print('atom not found!', protein_name, seq_aa, typ)
+            return None
 
     @staticmethod
     def calculate_dihedral(list_coords):
@@ -89,50 +88,40 @@ class pdb_utilities:
 
         return round(np.degrees(np.arctan2(y, x)), 3)        
 
-
     def plot_ramachandran(self, df:pd.DataFrame):
         plt.grid()
         plt.scatter(df['psi'], df['phi'], alpha=0.5)
 
     def build_ramachandran_aa(self, res_name):
         df_aa = self.df_atom[self.df_atom['res_name'] == res_name][['protein_name', 'res_seq']].drop_duplicates(keep='first')
-        self.df_aa = df_aa
         df_aa['psi'] = df_aa.apply(lambda x: self.calculate_angle(x['protein_name'], x['res_seq'], 'psi'), axis=1)
         df_aa['phi'] = df_aa.apply(lambda x: self.calculate_angle(x['protein_name'], x['res_seq'], 'phi'), axis=1)
-        # plt.grid()
-        # plt.scatter(df_aa['psi'], df_aa['phi'], alpha=0.5)
         self.plot_ramachandran(df_aa)
         return df_aa
 
-
     def build_ramachandran_helices(self):
-
         df_helices_ramanchandran = pd.DataFrame()
+        l_dict_ramanchandra = list()
 
-        for helix_type in self.type_helix.keys():
-            helix_class_code = self.type_helix[helix_type]
-            df_helix_torsion = self.df_helix[self.df_helix['helix_class'] == helix_class_code]
-
-            for index, helix in df_helix_torsion.iterrows():
-                if helix['end_chain_id'] != helix['init_chain_id']:
-                    print('end_chain_id and init_chain_id not matching!!!!!')
-                    break
-                else:
-
-                    for i in range(int(helix['init_seq_num']), int(helix['end_seq_num'])+1):
-                        dict_helix = {
-                            'helix_type': helix_type,
-                            'helix_type_code': str(helix_class_code),
-                            'protein_name': helix['protein_name'],
-                            'aa_seq_num': str(i),
-                            'psi': self.calculate_angle(helix['protein_name'], str(i), 'psi'),
-                            'phi': self.calculate_angle(helix['protein_name'], str(i), 'phi')
-                        }
-                        df_helices_ramanchandran = df_helices_ramanchandran.append(dict_helix, ignore_index=True)
-        
-        return df_helices_ramanchandran
-
+        for index, helix in self.df_helix.iterrows():
+            if helix['end_chain_id'] != helix['init_chain_id']:
+                print('end_chain_id and init_chain_id not matching!!!!!')
+                break
+            else:
+                for i in range(int(helix['init_seq_num']), int(helix['end_seq_num'])+1):
+                    dict_helix = {
+                        'helix_type': self.type_helix[helix['helix_class']],
+                        'helix_type_code': helix['helix_class'],
+                        'protein_name': helix['protein_name'],
+                        'aa_seq_num': str(i),
+                        'psi': self.calculate_angle(helix['protein_name'], str(i), 'psi'),
+                        'phi': self.calculate_angle(helix['protein_name'], str(i), 'phi')
+                    }
+                    l_dict_ramanchandra += [dict_helix]
             
+        df_helices_ramanchandran = pd.read_json(json.dumps(l_dict_ramanchandra))
+        return df_helices_ramanchandran
+   
 if __name__ == '__main__':
     pdb_parser = pdb_parser(1)
     pdb_utilities = pdb_utilities(pdb_parser.df_atom, 
