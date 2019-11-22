@@ -61,7 +61,7 @@ class pdb_parser():
                 break
             # self.process_pdb(pdb)
             # flushing out list for memory...
-            if index%500 == 0:
+            if index%500 == 0 and index != 0:
                 print('completed parsing {} pdbs'.format(index))
                 self.df_atom = pd.concat([self.df_atom, pd.read_json(json.dumps(self.l_atom))], ignore_index=True)
                 self.df_helix = pd.concat([self.df_helix, pd.read_json(json.dumps(self.l_helix))], ignore_index=True)

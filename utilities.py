@@ -25,9 +25,9 @@ class pdb_utilities:
         }
 
     def find_coordinates_atom(self, protein_name: str, atom_name: str):
-        atom_name.split('.')[0]
-        found_atom = self.df_atom[(self.df_atom['res_seq'] == atom_name.split('.')[0]) &
-                            (self.df_atom['atom_name'] == atom_name.split('.')[1])]
+        l_atom_name = atom_name.split('.')
+        found_atom = self.df_atom[(self.df_atom['res_seq'] == l_atom_name[0]) &
+                            (self.df_atom['atom_name'] == l_atom_name[1])]
         if protein_name:
             found_atom = found_atom[found_atom['protein_name'] == protein_name]
         
@@ -103,19 +103,18 @@ class pdb_utilities:
         df_helices_ramanchandran = pd.DataFrame()
         l_dict_ramanchandra = list()
 
-        for index, helix in self.df_helix.iterrows():
-            if helix['end_chain_id'] != helix['init_chain_id']:
-                print('end_chain_id and init_chain_id not matching!!!!!')
-                break
+        for helix in self.df_helix[['protein_name', 'helix_class', 'init_seq_num', 'end_seq_num', 'init_chain_id', 'end_chain_id']].values:
+            if helix[4] != helix[5]:
+                print('end_chain_id and init_chain_id not matching!!!!!', helix[4], helix[5])
             else:
-                for i in range(int(helix['init_seq_num']), int(helix['end_seq_num'])+1):
+                for i in range(int(helix[2]), int(helix[3])+1):
                     dict_helix = {
-                        'helix_type': self.type_helix[helix['helix_class']],
-                        'helix_type_code': helix['helix_class'],
-                        'protein_name': helix['protein_name'],
+                        'helix_type': self.type_helix[helix[1]],
+                        'helix_type_code': helix[1],
+                        'protein_name': helix[0],
                         'aa_seq_num': str(i),
-                        'psi': self.calculate_angle(helix['protein_name'], str(i), 'psi'),
-                        'phi': self.calculate_angle(helix['protein_name'], str(i), 'phi')
+                        'psi': self.calculate_angle(helix[0], str(i), 'psi'),
+                        'phi': self.calculate_angle(helix[0], str(i), 'phi')
                     }
                     l_dict_ramanchandra += [dict_helix]
             
