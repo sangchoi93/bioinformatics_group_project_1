@@ -50,7 +50,7 @@ class pdb_parser():
         self.l_helix = list()
 
         # using multithreading to download pdb files...
-        self.download_all_pdb()
+        self.download_all_pdb(index_to_break)
         if index_to_break == -1:
             print('parsing all pdb in {}'.format(self.filename_list_pdb))
         else:
@@ -151,10 +151,10 @@ class pdb_parser():
                                                             str(len(self.df_helix)), 
                                                             str(len(self.df_sheet))))
 
-    def download_all_pdb(self):
+    def download_all_pdb(self, index_to_break):
         from multiprocessing import Pool
-        p = Pool(5)
-        p.map(self.download_pdb, list(self.df_pdb_list['IDs'])) 
+        p = Pool(2)
+        p.map(self.download_pdb, list(self.df_pdb_list['IDs'])[:index_to_break]) 
         
     @staticmethod
     def download_pdb(protein_name):
@@ -162,7 +162,7 @@ class pdb_parser():
         pdb_dir = './pdb_data'
         protein_name = protein_name[:-1]
         if not(os.path.exists(pdb_dir + '/{}.pdb'.format(protein_name))):
-            print('pdb file for {} not found. Downloading from protein data bank...'.format(protein_name))
+#             print('pdb file for {} not found. Downloading from protein data bank...'.format(protein_name))
             
             with open(pdb_dir + '/{}.pdb'.format(protein_name), 'wb') as f:
                 url = 'https://files.rcsb.org/view/{}.pdb'.format(protein_name)

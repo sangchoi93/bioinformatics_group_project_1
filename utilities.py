@@ -95,19 +95,19 @@ class pdb_utilities:
 
         return round(np.degrees(np.arctan2(y, x)), 3)        
 
-    def plot_ramachandran(self, df:pd.DataFrame, colorcode_by: str=''):
+    def plot_ramachandran(self, df: pd.DataFrame, alpha: float, s: float, colorcode_by: str=''):
         plt.grid()
-        plt.xlabel('psi')
-        plt.ylabel('phi')
+        plt.xlabel('phi')
+        plt.ylabel('psi')
         if colorcode_by:
             classes = list(np.unique(df[colorcode_by]))
             colors = cm.rainbow(np.linspace(0, 1, len(classes)))
             for cl, c in zip(classes, colors):
                 df_tmp = df[df[colorcode_by] == cl]
-                plt.scatter(df_tmp['psi'], df_tmp['phi'], alpha=0.5, color=c)
+                plt.scatter(df_tmp['phi'], df_tmp['psi'], alpha=alpha, color=c, s=s)
             plt.legend(classes)
         else:
-            plt.scatter(df['psi'], df['phi'], alpha=0.5)
+            plt.scatter(df['phi'], df['psi'], alpha=alpha, s=s)
 
         
     def build_ramachandran_aa(self, res_name):
