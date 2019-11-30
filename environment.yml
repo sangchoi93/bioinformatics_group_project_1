@@ -1,0 +1,6 @@
+name: project_1
+dependencies:
+  - python=3.6
+  - matplotlib
+  - numpy
+  - pandas
