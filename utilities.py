@@ -13,6 +13,7 @@ class pdb_utilities:
         self.df_sheet = df_sheet
         self.df_aa = pd.DataFrame()
         self.type_helix = {
+            '0': 'unknown',
             '1': 'right-handed alpha',
             '2': 'right-handed omega',
             '3': 'right-handed psi',
